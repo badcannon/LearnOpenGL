@@ -77,20 +77,57 @@ int main(void)
 
 
   //Vertex data
+
+  // Triangle
   GLfloat vertexData[] = {
       -0.5f, -0.5f, 0.0f, // Left Bottom
        0.5f, -0.5f, 0.0f, // Right Bottom
        0.0f,  0.5f, 0.0f  // Top
   };
 
+  // Rectangle
+  GLfloat vertexData2[] = {
+    //upper triange
+    0.75f,0.75f,0.0f, //upper left
+    1.0f,0.75f,0.0f, //upper right
+    0.75f,0.5f,0.0f, //lower left
+
+    //lower triangle
+    0.75f,0.5f,0.0f, //lower left
+    1.0f,0.5f,0.0f, //lower left
+    1.0f,0.75,0.0f //upper right
+  };
+
+
+  //Rectangele with EBO
+  GLfloat vertexData3[] = {
+    //upper triange
+    0.75f,0.75f,0.0f, //upper left
+    1.0f,0.75f,0.0f, //upper right
+    0.75f,0.5f,0.0f, //lower left
+    1.0f,0.5f,0.0f, //lower right
+  };
+
+  unsigned int indices[] = {  // note that we start from 0!
+      0,1,2,   // first triangle
+      2,3,1    // second triangle
+  };
+
 
   // Vertex buffer object
-  unsigned int VBO;
+  unsigned int VBO,VBO_EBO;
   glGenBuffers(1,&VBO);
+  glGenBuffers(1,&VBO_EBO);
 
   //Vertex Array Object VAO
-  unsigned int VAO;
+  unsigned int VAO,VAO_EBO;
   glGenVertexArrays(1,&VAO);
+  glGenVertexArrays(1,&VAO_EBO);
+
+  //EBO for element buffer object
+  unsigned int EBO;
+  glGenBuffers(1,&EBO);
+
 
   //Binding VAO before configuring VBO
   glBindVertexArray(VAO);
@@ -108,6 +145,27 @@ int main(void)
 
   //Unbinding VAO after the configuration
   glBindVertexArray(0);
+
+  //Cleanup
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+
+  //Binding VAO for EBO config
+  glBindVertexArray(VAO_EBO);
+  glBindBuffer(GL_ARRAY_BUFFER,VBO_EBO);
+  glBufferData(GL_ARRAY_BUFFER,sizeof (vertexData3),vertexData3,GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof (indices),indices,GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3* sizeof(GL_FLOAT),(void*)0);
+  glEnableVertexAttribArray(0);
+
+  glBindVertexArray(0);
+
+
+  //Cleanup
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
   //Vertex Shader
 
@@ -199,6 +257,11 @@ int main(void)
       glUseProgram(ShaderProgram);
       glBindVertexArray(VAO);
       glDrawArrays(GL_TRIANGLES,0,3);
+      glBindVertexArray(0);
+
+      glBindVertexArray(VAO_EBO);
+      glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+      glBindVertexArray(0);
 
       glfwSwapBuffers(window);
       glfwPollEvents();
