@@ -38,6 +38,15 @@ const char* fragmentShaderSource= "#version 330 core\n"
 "   FragColor = vec4(0.3f,1.0f,1.0f,1.0f);"
 "}";
 
+//fragment shader source with yellow color
+
+const char* fragmentShaderSourceY= "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(1.0f,1.0f,0.0f,1.0f);"
+"}";
+
 
 
 int main(void)
@@ -99,6 +108,8 @@ int main(void)
   };
 
 
+
+
   //Rectangele with EBO
   GLfloat vertexData3[] = {
     //upper triange
@@ -114,15 +125,34 @@ int main(void)
   };
 
 
+  // Two Triangles
+
+  GLfloat vertexData4[] = {
+      //triangle 1
+       -1.0f,-0.75f,0.0f, //lower left
+       -0.1f,-0.75f,0.0f, //lower right
+       -0.1f,0.75f,0.0f, // top
+
+      //triangle 2
+      1.0f,-0.75f,0.0f, //lower right
+      0.1f,-0.75f,0.0f, //lower left
+      0.1f,0.75,0.0f //top
+  };
+
+
   // Vertex buffer object
-  unsigned int VBO,VBO_EBO;
+  unsigned int VBO,VBO_EBO,VBO_2;
   glGenBuffers(1,&VBO);
   glGenBuffers(1,&VBO_EBO);
+  glGenBuffers(1,&VBO_2);
+
 
   //Vertex Array Object VAO
-  unsigned int VAO,VAO_EBO;
+  unsigned int VAO,VAO_EBO,VAO_2;
   glGenVertexArrays(1,&VAO);
   glGenVertexArrays(1,&VAO_EBO);
+  glGenVertexArrays(1,&VAO_2);
+
 
   //EBO for element buffer object
   unsigned int EBO;
@@ -162,6 +192,20 @@ int main(void)
 
   glBindVertexArray(0);
 
+  //Excecise 1 Config
+
+  glBindVertexArray(VAO_2);
+
+  glBindBuffer(GL_ARRAY_BUFFER,VBO_2);
+  glBufferData(GL_ARRAY_BUFFER,sizeof(vertexData4),vertexData4,GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3 * sizeof(GL_FLOAT),(void*)0);
+  glEnableVertexAttribArray(0);
+
+  glBindVertexArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+
 
   //Cleanup
   glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -199,16 +243,30 @@ int main(void)
   unsigned int FragmentShader;
   FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
+  //Yellow Fragment shader
+  unsigned int fragmentShaderY;
+  fragmentShaderY = glCreateShader(GL_FRAGMENT_SHADER);
+
+
     //Compiling the Fragment Shader
   glShaderSource(FragmentShader,1,&fragmentShaderSource,NULL);
   glCompileShader(FragmentShader);
 
+  //Compiling The yellow Fragment Shader
+  glShaderSource(fragmentShaderY,1,&fragmentShaderSourceY,NULL);
+  glCompileShader(fragmentShaderY);
+
     //Error Handling
   glGetShaderiv(FragmentShader,GL_COMPILE_STATUS,&success);
+
+  //Error Handling Yellow fragment Shader
+  glGetShaderiv(fragmentShaderY,GL_COMPILE_STATUS,&success);
 
   if(!success)
   {
       glGetShaderInfoLog(FragmentShader,512,NULL,infoLog);
+      //yellow shader(fragment)
+      glGetShaderInfoLog(fragmentShaderY,512,NULL,infoLog);
       std::cout<<"ERROR::Fragment::SHADER::COMPILATION_FAILED"<<std::endl;
       std::cout<<infoLog;
 
@@ -222,7 +280,8 @@ int main(void)
 
   //Attaching shaders and Linking with right order
   glAttachShader(ShaderProgram,vertexShader);
-  glAttachShader(ShaderProgram,FragmentShader);
+  //glAttachShader(ShaderProgram,FragmentShader);
+  glAttachShader(ShaderProgram,fragmentShaderY);
   glLinkProgram(ShaderProgram);
 
   //Error Handling for Shader linking
@@ -238,6 +297,7 @@ int main(void)
 
   glDeleteShader(vertexShader);
   glDeleteShader(FragmentShader);
+  glDeleteShader(fragmentShaderY);
 
 
 
@@ -255,13 +315,19 @@ int main(void)
 
       //Triangle Drawing
       glUseProgram(ShaderProgram);
-      glBindVertexArray(VAO);
-      glDrawArrays(GL_TRIANGLES,0,3);
-      glBindVertexArray(0);
+//      glBindVertexArray(VAO);
+//      glDrawArrays(GL_TRIANGLES,0,3);
+//      glBindVertexArray(0);
 
-      glBindVertexArray(VAO_EBO);
-      glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-      glBindVertexArray(0);
+      //EBO Rectangle
+//      glBindVertexArray(VAO_EBO);
+//      glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+//      glBindVertexArray(0);
+
+      //Excercise 1
+       glBindVertexArray(VAO_2);
+       glDrawArrays(GL_TRIANGLES,0,6);
+       glBindVertexArray(0);
 
       glfwSwapBuffers(window);
       glfwPollEvents();
