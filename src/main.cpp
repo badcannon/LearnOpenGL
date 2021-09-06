@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <math.h>
 
 
 
@@ -18,14 +19,22 @@ const int WIDTH = 600;
 const int HEIGHT = 400;
 
 
+
+// Max vertex attribs
+int nrAttributes;
+
 // Shader Sources
 
 //vertex shader source
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0 ) in vec3 aPos;\n"
+"layout (location = 1 ) in vec3 aColor; \n"
+"out vec4 fragmentColor; //Fragment color input from the vertex shader! \n"
 "void main()\n"
 "{\n"
-"   gl_Position = vec4(aPos.x,aPos.y,aPos.z,1.0f);\n"
+"   gl_Position = vec4(aPos,1.0f);\n"
+//"   fragmentColor = vec4(0.5f,0.0f,0.5f,1.0f); \n"
+"   fragmentColor = vec4(aColor,1.0f); \n"
 "}\0";
 
 
@@ -33,9 +42,13 @@ const char* vertexShaderSource = "#version 330 core\n"
 
 const char* fragmentShaderSource= "#version 330 core\n"
 "out vec4 FragColor;\n"
+"in vec4 fragmentColor;\n"
+"uniform vec4 uniformFragmentColor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(0.3f,1.0f,1.0f,1.0f);"
+//"   FragColor = vec4(0.3f,1.0f,1.0f,1.0f);"
+"   FragColor = fragmentColor;\n"
+//  "FragColor = uniformFragmentColor;\n"
 "}";
 
 //fragment shader source with yellow color
@@ -57,6 +70,8 @@ int main(void)
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
   glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
+
+
 
 
   GLFWwindow* window = glfwCreateWindow(WIDTH,HEIGHT,"Learning OpenGL",NULL,NULL);
@@ -83,6 +98,13 @@ int main(void)
   glViewport(0,0,400,600);
 
   glfwSetFramebufferSizeCallback(window,framebuffer_size_callback);
+
+ //Fetching the max vertex attributes
+
+  glGetIntegerv(GL_MAX_VERTEX_ATTRIBS,&nrAttributes);
+
+  std::cout<<"Max vertexs allowed in my graphics card :"<<nrAttributes<<std::endl;
+
 
 
   //Vertex data
@@ -139,20 +161,28 @@ int main(void)
       0.1f,0.75,0.0f //top
   };
 
+  GLfloat vertexData5[] = {
+      // positions         // colors
+       0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+      -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+       0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
+  };
+
 
   // Vertex buffer object
-  unsigned int VBO,VBO_EBO,VBO_2;
+  unsigned int VBO,VBO_EBO,VBO_2,VBO_3;
   glGenBuffers(1,&VBO);
   glGenBuffers(1,&VBO_EBO);
   glGenBuffers(1,&VBO_2);
+  glGenBuffers(1,&VBO_3);
 
 
   //Vertex Array Object VAO
-  unsigned int VAO,VAO_EBO,VAO_2;
+  unsigned int VAO,VAO_EBO,VAO_2,VAO_3;
   glGenVertexArrays(1,&VAO);
   glGenVertexArrays(1,&VAO_EBO);
   glGenVertexArrays(1,&VAO_2);
-
+  glGenVertexArrays(1,&VAO_3);
 
   //EBO for element buffer object
   unsigned int EBO;
@@ -192,6 +222,11 @@ int main(void)
 
   glBindVertexArray(0);
 
+  //Cleanup
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+
   //Excecise 1 Config
 
   glBindVertexArray(VAO_2);
@@ -202,14 +237,30 @@ int main(void)
   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3 * sizeof(GL_FLOAT),(void*)0);
   glEnableVertexAttribArray(0);
 
+  //Cleanup
   glBindVertexArray(0);
-
   glBindBuffer(GL_ARRAY_BUFFER,0);
 
+  // Vertex Data 5
+  glBindVertexArray(VAO_3);
+
+  glBindBuffer(GL_ARRAY_BUFFER,VBO_3);
+  glBufferData(GL_ARRAY_BUFFER,sizeof(vertexData5),vertexData5,GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GL_FLOAT),(void*)0);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6 * sizeof(GL_FLOAT),(void*)(3 * sizeof(GL_FLOAT)) );
+
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
 
   //Cleanup
+
+  glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER,0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+
+
+
+
 
   //Vertex Shader
 
@@ -280,8 +331,8 @@ int main(void)
 
   //Attaching shaders and Linking with right order
   glAttachShader(ShaderProgram,vertexShader);
-  //glAttachShader(ShaderProgram,FragmentShader);
-  glAttachShader(ShaderProgram,fragmentShaderY);
+  glAttachShader(ShaderProgram,FragmentShader);
+//  glAttachShader(ShaderProgram,fragmentShaderY);
   glLinkProgram(ShaderProgram);
 
   //Error Handling for Shader linking
@@ -299,6 +350,9 @@ int main(void)
   glDeleteShader(FragmentShader);
   glDeleteShader(fragmentShaderY);
 
+  // Get uniform declared in fragment Shader
+
+  int fragmentColorLocation = glGetUniformLocation(ShaderProgram,"uniformFragmentColor");
 
 
 
@@ -315,6 +369,13 @@ int main(void)
 
       //Triangle Drawing
       glUseProgram(ShaderProgram);
+      // Assign Uniform Value
+      float timeValue = glfwGetTime();
+      float greenValue = (sin(timeValue) / 2.0f ) + 0.5f ;
+      glUniform4f(fragmentColorLocation,0.0f,greenValue,0.0f,1.0f);
+
+
+      // Simple Triangle !
 //      glBindVertexArray(VAO);
 //      glDrawArrays(GL_TRIANGLES,0,3);
 //      glBindVertexArray(0);
@@ -325,9 +386,17 @@ int main(void)
 //      glBindVertexArray(0);
 
       //Excercise 1
-       glBindVertexArray(VAO_2);
-       glDrawArrays(GL_TRIANGLES,0,6);
-       glBindVertexArray(0);
+//       glBindVertexArray(VAO_2);
+//       glDrawArrays(GL_TRIANGLES,0,6);
+//       glBindVertexArray(0);
+
+
+      //Triangle with edge color with color in vertex data
+
+      glBindVertexArray(VAO_3);
+      glDrawArrays(GL_TRIANGLES,0,3);
+      glBindVertexArray(0);
+
 
       glfwSwapBuffers(window);
       glfwPollEvents();
