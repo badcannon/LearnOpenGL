@@ -1,2 +1,1 @@
-
-add_executable(LearnOpenGL main.cpp)
+add_executable(LearnOpenGL main.cpp shader.hpp shader.cpp)

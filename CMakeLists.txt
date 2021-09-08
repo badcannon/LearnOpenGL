@@ -12,16 +12,25 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
 set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
 
 add_subdirectory("src")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/libs")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external")
+
+#Added Directories for Helpers and Shaders
+#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/libs")
+#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/shaders")
+
 
 target_include_directories(LearnOpenGL
-    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw-3.3.4/include")
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/external/glfw-3.3.4/include")
 
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(LearnOpenGL PRIVATE ${OPENGL_gl_LIBRARY})
-target_link_libraries(LearnOpenGL PRIVATE glad)
+target_link_libraries(LearnOpenGL PUBLIC glad)
 target_link_libraries(LearnOpenGL PRIVATE glfw)
+
+# Library function I have writtern !
+#target_link_libraries(LearnOpenGL PRIVATE shader)
+
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
