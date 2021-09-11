@@ -2,8 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <math.h>
-#include "shader.hpp"
-
+#include "utils/shader.hpp"
+#include "utils/logger.hpp"
 
 // To resize the viewport when the user resizes the window !
 void framebuffer_size_callback(GLFWwindow* window,int width,int height);
@@ -42,6 +42,10 @@ int main(void)
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
   glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
+
+
+  //Logger class !
+  Logger log;
 
 
   GLFWwindow* window = glfwCreateWindow(WIDTH,HEIGHT,"Learning OpenGL",NULL,NULL);
@@ -234,7 +238,7 @@ int main(void)
 
   //Vertex Shader
 
-  Shader shader("../shaders/shader.vs","../shaders/shader.fs");
+  Shader shader(vertexShaderSource,fragmentShaderSource);
   Shader shader_y(vertexShaderSource,fragmentShaderSourceY);
 
 
@@ -242,7 +246,7 @@ int main(void)
   // Get uniform declared in fragment Shader
 
   int fragmentColorLocation = glGetUniformLocation( shader.ID,"uniformFragmentColor");
-
+//  int offset = glGetUniformLocation(shader.ID, "uniformOffset"); taken care by the shader class !
 
   while(!glfwWindowShouldClose(window))
 
@@ -258,7 +262,9 @@ int main(void)
       // Assign Uniform Value
       float timeValue = glfwGetTime();
       float greenValue = (sin(timeValue) / 2.0f ) + 0.5f ;
+      float offset = (sin(timeValue) / 2.0f ) + 0.1f ;
       glUniform4f(fragmentColorLocation,0.0f,greenValue,0.0f,1.0f);
+      shader.setFloat("uniformOffset",offset);
 
 
       // Simple Triangle !
