@@ -5,6 +5,9 @@
 #include "utils/shader.hpp"
 #include "utils/logger.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "utils/stb_image.h"
+
 // To resize the viewport when the user resizes the window !
 void framebuffer_size_callback(GLFWwindow* window,int width,int height);
 
@@ -32,6 +35,12 @@ const char* fragmentShaderSource= "/home/badcannon/Development/Projects/C++/Lear
 
 //fragment shader source with yellow color
 const char* fragmentShaderSourceY= "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader_y.vs";
+
+//awesome image shader (vert)
+const char* vertexShaderSource_awe = "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader_awe.vert";
+
+//awesome image shader (frag)
+const char* fragmentShaderSource_awe = "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader_awe.frag";
 
 
 int main(void)
@@ -107,19 +116,31 @@ int main(void)
 
 
   //Rectangele with EBO
+//  GLfloat vertexData3[] = {
+//    //upper triange
+//    0.75f,0.75f,0.0f, //upper left
+//    1.0f,0.75f,0.0f, //upper right
+//    0.75f,0.5f,0.0f, //lower left
+//    1.0f,0.5f,0.0f, //lower right
+//  };
+
   GLfloat vertexData3[] = {
-    //upper triange
-    0.75f,0.75f,0.0f, //upper left
-    1.0f,0.75f,0.0f, //upper right
-    0.75f,0.5f,0.0f, //lower left
-    1.0f,0.5f,0.0f, //lower right
+      // positions          // colors           // texture coords
+         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
   };
 
-  unsigned int indices[] = {  // note that we start from 0!
-      0,1,2,   // first triangle
-      2,3,1    // second triangle
-  };
+//  unsigned int indices[] = {  // note that we start from 0!
+//      0,1,2,   // first triangle
+//      2,3,1    // second triangle
+//  };
 
+  unsigned int indices[] = {
+      0, 1, 3,   // first triangle
+      1, 2, 3    // second triangle
+  };
 
   // Two Triangles
 
@@ -141,6 +162,64 @@ int main(void)
       -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
        0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
   };
+
+
+  //Texture
+
+
+   //Generating the texture
+
+  unsigned int texture[3];
+  glGenTextures(2,texture);
+
+  glBindTexture(GL_TEXTURE_2D,texture[0]);
+
+  //Set texture wrapping and options
+  // set the texture wrapping parameters
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  // set texture filtering parameters
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  //Reading the image
+
+  int width,height,nrChannels;
+  unsigned char *data = stbi_load("/home/badcannon/Development/Projects/C++/LearnOpenGL/assets/images/container.jpg",&width,&height,&nrChannels,0);
+
+  if(data)
+  {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+      glGenerateMipmap(GL_TEXTURE_2D);
+
+  }
+  else
+  {
+      std::cout<<"ERROR::LOADING_IMAGE_DATA::FAILED_TO_LOAD_TEXTURE"<<std::endl;
+  }
+
+  stbi_image_free(data);
+
+  glBindTexture(GL_TEXTURE_2D,texture[1]);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  data = stbi_load("/home/badcannon/Development/Projects/C++/LearnOpenGL/assets/images/awesomeface.png",&width,&height,&nrChannels,0);
+
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+    }
+    else
+    {
+        std::cout<<"ERROR::LOADING_IMAGE_DATA::FAILED_TO_LOAD_TEXTURE"<<std::endl;
+    }
+
+  stbi_image_free(data);
 
 
   // Vertex buffer object
@@ -191,8 +270,16 @@ int main(void)
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof (indices),indices,GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3* sizeof(GL_FLOAT),(void*)0);
+  //Vetex Info
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8 * sizeof(GL_FLOAT),(void*)0);
+  //Colour Info
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8* sizeof(GL_FLOAT),(void*)(3*sizeof(GL_FLOAT)) );
+  //Texture Info
+  glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,8 * sizeof(GL_FLOAT),(void*)(6*sizeof(GL_FLOAT)));
+
   glEnableVertexAttribArray(0);
+//  glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
 
   glBindVertexArray(0);
 
@@ -240,6 +327,7 @@ int main(void)
 
   Shader shader(vertexShaderSource,fragmentShaderSource);
   Shader shader_y(vertexShaderSource,fragmentShaderSourceY);
+  Shader shader_awe(vertexShaderSource_awe,fragmentShaderSource_awe);
 
 
 
@@ -258,13 +346,15 @@ int main(void)
       glClear(GL_COLOR_BUFFER_BIT);
 
       //Triangle Drawing
-      shader.use();
-      // Assign Uniform Value
-      float timeValue = glfwGetTime();
-      float greenValue = (sin(timeValue) / 2.0f ) + 0.5f ;
-      float offset = (sin(timeValue) / 2.0f ) + 0.1f ;
-      glUniform4f(fragmentColorLocation,0.0f,greenValue,0.0f,1.0f);
-      shader.setFloat("uniformOffset",offset);
+//      shader.use();
+//      // Assign Uniform Value
+//      float timeValue = glfwGetTime();
+//      float greenValue = (sin(timeValue) / 2.0f ) + 0.5f ;
+//      glUniform4f(fragmentColorLocation,0.0f,greenValue,0.0f,1.0f);
+
+      //Offset to move the triangle !
+//      float offset = (sin(timeValue) / 2.0f ) + 0.1f ;
+//      shader.setFloat("uniformOffset",offset);
 
 
       // Simple Triangle !
@@ -273,9 +363,23 @@ int main(void)
 //      glBindVertexArray(0);
 
       //EBO Rectangle
-//      glBindVertexArray(VAO_EBO);
-//      glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-//      glBindVertexArray(0);
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D,texture[0]);
+      shader.use();
+      glBindVertexArray(VAO_EBO);
+      glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+      glBindVertexArray(0);
+
+      //EBO Rectangle 2
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D,texture[1]);
+      shader_awe.use();
+      shader_awe.setFloat("uniformOffsetx",0.4);
+      shader_awe.setFloat("uniformOffsety",0.4);
+
+      glBindVertexArray(VAO_EBO);
+      glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+      glBindVertexArray(0);
 
       //Excercise 1
 //       glBindVertexArray(VAO_2);
@@ -285,9 +389,9 @@ int main(void)
 
       //Triangle with edge color with color in vertex data
 
-      glBindVertexArray(VAO_3);
-      glDrawArrays(GL_TRIANGLES,0,3);
-      glBindVertexArray(0);
+//      glBindVertexArray(VAO_3);
+//      glDrawArrays(GL_TRIANGLES,0,3);
+//      glBindVertexArray(0);
 
 
       glfwSwapBuffers(window);

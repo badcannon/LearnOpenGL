@@ -4,5 +4,6 @@ add_executable(LearnOpenGL
     utils/shader.cpp
     utils/logger.hpp
     utils/logger.cpp
+    utils/stb_image.h
 
     )
