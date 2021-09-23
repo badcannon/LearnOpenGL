@@ -8,414 +8,313 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "utils/stb_image.h"
 
+//Math libraries
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+
+
 // To resize the viewport when the user resizes the window !
 void framebuffer_size_callback(GLFWwindow* window,int width,int height);
 
 
 
 // Input process
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window,Shader shader);
 
 
-const int WIDTH = 600;
-const int HEIGHT = 400;
+const int WIDTH = 800;
+const int HEIGHT = 600;
 
 
 
-// Max vertex attribs
-int nrAttributes;
 
-// Shader Sources
-
-//vertex shader source
-const char* vertexShaderSource = "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader.vs";
-
-//fragment shader source
-const char* fragmentShaderSource= "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader.fs";
-
-//fragment shader source with yellow color
-const char* fragmentShaderSourceY= "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader_y.vs";
-
-//awesome image shader (vert)
-const char* vertexShaderSource_awe = "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader_awe.vert";
-
-//awesome image shader (frag)
-const char* fragmentShaderSource_awe = "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader_awe.frag";
-
-
-int main(void)
+int main()
 {
-
-  // Glfw window and context creation initiation !
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
-
-
-  //Logger class !
-  Logger log;
+    // Glfw window and context creation initiation !
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
 
 
-  GLFWwindow* window = glfwCreateWindow(WIDTH,HEIGHT,"Learning OpenGL",NULL,NULL);
-  if(window == NULL)
-  {
-      std::cout<<"Failed to create GLFW window"<<std::endl;
-      glfwTerminate();
-      return -1;
-  }
-
-  glfwMakeContextCurrent(window);
-
-
-  //Initializing GLAD for function pointers platform specific !
-
-  if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-  {
-
-      std::cout<<"Glad failed to initialize !"<<std::endl;
-      return -1;
-  }
-
-
-  glViewport(0,0,400,600);
-
-  glfwSetFramebufferSizeCallback(window,framebuffer_size_callback);
-
- //Fetching the max vertex attributes
-
-  glGetIntegerv(GL_MAX_VERTEX_ATTRIBS,&nrAttributes);
-
-  std::cout<<"Max vertexs allowed in my graphics card :"<<nrAttributes<<std::endl;
-
-
-
-  //Vertex data
-
-  // Triangle
-  GLfloat vertexData[] = {
-      -0.5f, -0.5f, 0.0f, // Left Bottom
-       0.5f, -0.5f, 0.0f, // Right Bottom
-       0.0f,  0.5f, 0.0f  // Top
-  };
-
-  // Rectangle
-  GLfloat vertexData2[] = {
-    //upper triange
-    0.75f,0.75f,0.0f, //upper left
-    1.0f,0.75f,0.0f, //upper right
-    0.75f,0.5f,0.0f, //lower left
-
-    //lower triangle
-    0.75f,0.5f,0.0f, //lower left
-    1.0f,0.5f,0.0f, //lower left
-    1.0f,0.75,0.0f //upper right
-  };
+    //Logger class !
+    Logger log;
 
 
 
 
-  //Rectangele with EBO
-//  GLfloat vertexData3[] = {
-//    //upper triange
-//    0.75f,0.75f,0.0f, //upper left
-//    1.0f,0.75f,0.0f, //upper right
-//    0.75f,0.5f,0.0f, //lower left
-//    1.0f,0.5f,0.0f, //lower right
-//  };
-
-  GLfloat vertexData3[] = {
-      // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
-  };
-
-//  unsigned int indices[] = {  // note that we start from 0!
-//      0,1,2,   // first triangle
-//      2,3,1    // second triangle
-//  };
-
-  unsigned int indices[] = {
-      0, 1, 3,   // first triangle
-      1, 2, 3    // second triangle
-  };
-
-  // Two Triangles
-
-  GLfloat vertexData4[] = {
-      //triangle 1
-       -1.0f,-0.75f,0.0f, //lower left
-       -0.1f,-0.75f,0.0f, //lower right
-       -0.1f,0.75f,0.0f, // top
-
-      //triangle 2
-      1.0f,-0.75f,0.0f, //lower right
-      0.1f,-0.75f,0.0f, //lower left
-      0.1f,0.75,0.0f //top
-  };
-
-  GLfloat vertexData5[] = {
-      // positions         // colors
-       0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-      -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-       0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
-  };
-
-
-  //Texture
-
-
-   //Generating the texture
-
-  unsigned int texture[3];
-  glGenTextures(2,texture);
-
-  glBindTexture(GL_TEXTURE_2D,texture[0]);
-
-  //Set texture wrapping and options
-  // set the texture wrapping parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  // set texture filtering parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //Reading the image
-
-  int width,height,nrChannels;
-  unsigned char *data = stbi_load("/home/badcannon/Development/Projects/C++/LearnOpenGL/assets/images/container.jpg",&width,&height,&nrChannels,0);
-
-  if(data)
-  {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-      glGenerateMipmap(GL_TEXTURE_2D);
-
-  }
-  else
-  {
-      std::cout<<"ERROR::LOADING_IMAGE_DATA::FAILED_TO_LOAD_TEXTURE"<<std::endl;
-  }
-
-  stbi_image_free(data);
-
-  glBindTexture(GL_TEXTURE_2D,texture[1]);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  data = stbi_load("/home/badcannon/Development/Projects/C++/LearnOpenGL/assets/images/awesomeface.png",&width,&height,&nrChannels,0);
-
-    if(data)
+    GLFWwindow* window = glfwCreateWindow(WIDTH,HEIGHT,"Learning OpenGL",NULL,NULL);
+    if(window == NULL)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-    }
-    else
-    {
-        std::cout<<"ERROR::LOADING_IMAGE_DATA::FAILED_TO_LOAD_TEXTURE"<<std::endl;
+        std::cout<<"Failed to create GLFW window"<<std::endl;
+        glfwTerminate();
+        return -1;
     }
 
-  stbi_image_free(data);
+    glfwMakeContextCurrent(window);
 
 
-  // Vertex buffer object
-  unsigned int VBO,VBO_EBO,VBO_2,VBO_3;
-  glGenBuffers(1,&VBO);
-  glGenBuffers(1,&VBO_EBO);
-  glGenBuffers(1,&VBO_2);
-  glGenBuffers(1,&VBO_3);
+    //Initializing GLAD for function pointers platform specific !
+
+    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+
+        std::cout<<"Glad failed to initialize !"<<std::endl;
+        return -1;
+    }
 
 
-  //Vertex Array Object VAO
-  unsigned int VAO,VAO_EBO,VAO_2,VAO_3;
-  glGenVertexArrays(1,&VAO);
-  glGenVertexArrays(1,&VAO_EBO);
-  glGenVertexArrays(1,&VAO_2);
-  glGenVertexArrays(1,&VAO_3);
+    glViewport(0,0,WIDTH,HEIGHT);
 
-  //EBO for element buffer object
-  unsigned int EBO;
-  glGenBuffers(1,&EBO);
+    glfwSetFramebufferSizeCallback(window,framebuffer_size_callback);
 
 
-  //Binding VAO before configuring VBO
-  glBindVertexArray(VAO);
+    //Shader
+    Shader ourShader("/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader.vs", "/home/badcannon/Development/Projects/C++/LearnOpenGL/shaders/shader.fs");
 
-  // Binding with the GL_Array_buffer
-  glBindBuffer(GL_ARRAY_BUFFER,VBO);
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+        // ------------------------------------------------------------------
+    float vertices[] = {
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-  //Copying the vertex data
-  glBufferData(GL_ARRAY_BUFFER,sizeof (vertexData),vertexData,GL_STATIC_DRAW);
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
-  //Attribute stuff
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof (GL_FLOAT),(void*)0);
-  glEnableVertexAttribArray(0);
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-  //Unbinding VAO after the configuration
-  glBindVertexArray(0);
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
 
-  //Cleanup
-  glBindBuffer(GL_ARRAY_BUFFER,0);
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
 
-  //Binding VAO for EBO config
-  glBindVertexArray(VAO_EBO);
-  glBindBuffer(GL_ARRAY_BUFFER,VBO_EBO);
-  glBufferData(GL_ARRAY_BUFFER,sizeof (vertexData3),vertexData3,GL_STATIC_DRAW);
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof (indices),indices,GL_STATIC_DRAW);
+        unsigned int indices[] = {
+            0, 1, 3, // first triangle
+            1, 2, 3  // second triangle
+        };
+        unsigned int VBO, VAO, EBO;
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+        glGenBuffers(1, &EBO);
 
-  //Vetex Info
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8 * sizeof(GL_FLOAT),(void*)0);
-  //Colour Info
-  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8* sizeof(GL_FLOAT),(void*)(3*sizeof(GL_FLOAT)) );
-  //Texture Info
-  glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,8 * sizeof(GL_FLOAT),(void*)(6*sizeof(GL_FLOAT)));
+        glBindVertexArray(VAO);
 
-  glEnableVertexAttribArray(0);
-//  glEnableVertexAttribArray(1);
-  glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glBindVertexArray(0);
+//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+//        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-  //Cleanup
-  glBindBuffer(GL_ARRAY_BUFFER,0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-  glBindBuffer(GL_ARRAY_BUFFER,0);
+        // position attribute
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+        // texture coord attribute
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
 
-  //Excecise 1 Config
+        // load and create a texture
+         // -------------------------
+         unsigned int texture1, texture2;
+         // texture 1
+         // ---------
+         glGenTextures(1, &texture1);
+         glBindTexture(GL_TEXTURE_2D, texture1);
+         // set the texture wrapping parameters
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+         // set texture filtering parameters
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+         // load image, create texture and generate mipmaps
+         int width, height, nrChannels;
+         stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+         unsigned char *data = stbi_load("/home/badcannon/Development/Projects/C++/LearnOpenGL/assets/images/container.jpg", &width, &height, &nrChannels, 0);
+         if (data)
+         {
+             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+             glGenerateMipmap(GL_TEXTURE_2D);
+         }
+         else
+         {
+             std::cout << "Failed to load texture" << std::endl;
+         }
+         stbi_image_free(data);
+         // texture 2
+         // ---------
+         glGenTextures(1, &texture2);
+         glBindTexture(GL_TEXTURE_2D, texture2);
+         // set the texture wrapping parameters
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+         // set texture filtering parameters
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+         // load image, create texture and generate mipmaps
+         data = stbi_load("/home/badcannon/Development/Projects/C++/LearnOpenGL/assets/images/awesomeface.png", &width, &height, &nrChannels, 0);
+         if (data)
+         {
+             // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
+             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+             glGenerateMipmap(GL_TEXTURE_2D);
+         }
+         else
+         {
+             std::cout << "Failed to load texture" << std::endl;
+         }
+         stbi_image_free(data);
 
-  glBindVertexArray(VAO_2);
-
-  glBindBuffer(GL_ARRAY_BUFFER,VBO_2);
-  glBufferData(GL_ARRAY_BUFFER,sizeof(vertexData4),vertexData4,GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3 * sizeof(GL_FLOAT),(void*)0);
-  glEnableVertexAttribArray(0);
-
-  //Cleanup
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER,0);
-
-  // Vertex Data 5
-  glBindVertexArray(VAO_3);
-
-  glBindBuffer(GL_ARRAY_BUFFER,VBO_3);
-  glBufferData(GL_ARRAY_BUFFER,sizeof(vertexData5),vertexData5,GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GL_FLOAT),(void*)0);
-  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6 * sizeof(GL_FLOAT),(void*)(3 * sizeof(GL_FLOAT)) );
-
-  glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);
-
-  //Cleanup
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER,0);
-
-
-
-
-
-  //Vertex Shader
-
-  Shader shader(vertexShaderSource,fragmentShaderSource);
-  Shader shader_y(vertexShaderSource,fragmentShaderSourceY);
-  Shader shader_awe(vertexShaderSource_awe,fragmentShaderSource_awe);
-
-
-
-  // Get uniform declared in fragment Shader
-
-  int fragmentColorLocation = glGetUniformLocation( shader.ID,"uniformFragmentColor");
-//  int offset = glGetUniformLocation(shader.ID, "uniformOffset"); taken care by the shader class !
-
-  while(!glfwWindowShouldClose(window))
-
-  {
-
-      processInput(window);
-
-      glClearColor(0.8f,1.0f,1.0f,1.0f);
-      glClear(GL_COLOR_BUFFER_BIT);
-
-      //Triangle Drawing
-//      shader.use();
-//      // Assign Uniform Value
-//      float timeValue = glfwGetTime();
-//      float greenValue = (sin(timeValue) / 2.0f ) + 0.5f ;
-//      glUniform4f(fragmentColorLocation,0.0f,greenValue,0.0f,1.0f);
-
-      //Offset to move the triangle !
-//      float offset = (sin(timeValue) / 2.0f ) + 0.1f ;
-//      shader.setFloat("uniformOffset",offset);
-
-
-      // Simple Triangle !
-//      glBindVertexArray(VAO);
-//      glDrawArrays(GL_TRIANGLES,0,3);
-//      glBindVertexArray(0);
-
-      //EBO Rectangle
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D,texture[0]);
-      shader.use();
-      glBindVertexArray(VAO_EBO);
-      glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-      glBindVertexArray(0);
-
-      //EBO Rectangle 2
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D,texture[1]);
-      shader_awe.use();
-      shader_awe.setFloat("uniformOffsetx",0.4);
-      shader_awe.setFloat("uniformOffsety",0.4);
-
-      glBindVertexArray(VAO_EBO);
-      glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-      glBindVertexArray(0);
-
-      //Excercise 1
-//       glBindVertexArray(VAO_2);
-//       glDrawArrays(GL_TRIANGLES,0,6);
-//       glBindVertexArray(0);
+         // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
+         // -------------------------------------------------------------------------------------------
 
 
-      //Triangle with edge color with color in vertex data
 
-//      glBindVertexArray(VAO_3);
-//      glDrawArrays(GL_TRIANGLES,0,3);
-//      glBindVertexArray(0);
+    //Enabling depth testing so opengl knows which fragment to discard based on the depth array mantained by glfw
+         glEnable(GL_DEPTH_TEST);
+
+    while(!glfwWindowShouldClose(window))
+
+    {
+
+        processInput(window,ourShader);
+
+        glClearColor(0.8f,1.0f,1.0f,1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // bind textures on corresponding texture units
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, texture1);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, texture2);
 
 
-      glfwSwapBuffers(window);
-      glfwPollEvents();
+                // get matrix's uniform location and set matrix
+                ourShader.use();
+                ourShader.setInt("ourTexture1", 0);
+                ourShader.setInt("ourTexture2", 1);
 
+
+
+                //Model Matrix with all the transformations Local - > World space
+                glm::mat4 model = glm::mat4(1.0f);
+//                model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+                //World space -> view Space
+                glm::mat4 view = glm::mat4(1.0f);
+                // note that we're translating the scene in the reverse direction of where we want to move
+                view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+                //Projection matrix for clip space !r
+                glm::mat4 projection;
+                projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f,100.f);
+
+
+
+                ourShader.setMat4("model",model);
+                ourShader.setMat4("view",view);
+                ourShader.setMat4("proj",projection);
+
+                // render container
+                glBindVertexArray(VAO);
+                for(unsigned int i = 0; i < 10; i++)
+                {
+                    model = glm::translate(model, cubePositions[i]);
+                    float angle = 20.0f * i;
+                    model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+                    ourShader.setMat4("model", model);
+
+                    glDrawArrays(GL_TRIANGLES, 0, 36);
+                }
+
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+
+    }
+
+    // optional: de-allocate all resources once they've outlived their purpose:
+       // ------------------------------------------------------------------------
+       glDeleteVertexArrays(1, &VAO);
+       glDeleteBuffers(1, &VBO);
+       glDeleteBuffers(1, &EBO);
+
+   //Clean up
+    glfwTerminate();
+    return 0;
   }
-
- //Clean up
-  glfwTerminate();
-  return 0;
-}
 
 void framebuffer_size_callback(GLFWwindow* window,int width,int height)
 {
     glViewport(0,0,width,height);
 }
 
+ // Global Variable :D
+float currentMixRatio = 0.0f;
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window,Shader shader)
 {
+
 
     if(glfwGetKey(window,GLFW_KEY_ESCAPE)==GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window,GLFW_TRUE);
     }
-
+    if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS)
+        {
+            glGetUniformfv(shader.ID,glGetUniformLocation(shader.ID,"mixRatio"),&currentMixRatio);
+            currentMixRatio = currentMixRatio + 0.1f;
+            if(currentMixRatio >= 1.0f) currentMixRatio = 1.0f;
+            shader.setFloat("mixRatio", currentMixRatio );
+        }
+        if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS)
+        {
+            glGetUniformfv(shader.ID,glGetUniformLocation(shader.ID,"mixRatio"),&currentMixRatio);
+            currentMixRatio = currentMixRatio - 0.1f;
+            if(currentMixRatio <= 0.0f) currentMixRatio = 0.0f;
+            shader.setFloat("mixRatio",currentMixRatio);
+        }
 }
+

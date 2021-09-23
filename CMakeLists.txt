@@ -20,7 +20,9 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
 
 target_include_directories(LearnOpenGL
-    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/external/glfw-3.3.4/include")
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/external/glfw-3.3.4/include"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/external/glm/"
+    )
 
 find_package(OpenGL REQUIRED)
 

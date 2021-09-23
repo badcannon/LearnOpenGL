@@ -5,5 +5,7 @@ add_executable(LearnOpenGL
     utils/logger.hpp
     utils/logger.cpp
     utils/stb_image.h
+    lessons/coord.h
+    lessons/coord.cpp
 
     )

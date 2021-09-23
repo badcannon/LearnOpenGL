@@ -7,9 +7,10 @@ layout (location = 0) in vec3 aPos;
 uniform float uniformOffsetx;
 uniform float uniformOffsety;
 out vec2 TexCoord;
+uniform mat4 translation;
 
 void main(void)
 {
-    gl_Position = vec4(aPos.x+uniformOffsetx,aPos.y + uniformOffsety,aPos.z,1.0f);
+    gl_Position = translation * vec4(aPos.x+uniformOffsetx,aPos.y + uniformOffsety,aPos.z,1.0f) ;
     TexCoord = aTexCoord;
 }

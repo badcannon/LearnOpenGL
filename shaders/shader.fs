@@ -1,17 +1,13 @@
 #version 330 core
 out vec4 FragColor;
-in vec4 fragmentColor;
-uniform vec4 uniformFragmentColor;
-in vec4 fragmentColor_updated;
 in vec2 TexCoord;
-uniform sampler2D ourTexture;
+uniform sampler2D ourTexture1;
+uniform sampler2D ourTexture2;
+uniform float mixRatio;
 void main()
 {
-//   FragColor = vec4(0.3f,1.0f,1.0f,1.0f);
- FragColor = texture(ourTexture,TexCoord);
-//FragColor = fragmentColor_updated;
-//  FragColor = uniformFragmentColor;
 
+ FragColor = mix(texture(ourTexture1,TexCoord),texture(ourTexture2,TexCoord),mixRatio);;
 
 
 }
