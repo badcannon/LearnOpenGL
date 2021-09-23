@@ -7,5 +7,6 @@ add_executable(LearnOpenGL
     utils/stb_image.h
     lessons/coord.h
     lessons/coord.cpp
-
+    utils/camera.h
+    utils/camera.cpp
     )
